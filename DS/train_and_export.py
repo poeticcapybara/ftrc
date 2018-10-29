@@ -44,6 +44,6 @@ def generate_model(output_dir=None):
 if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument('--dir', help='Directory to save model')
+    parser.add_argument('-o', '--outputdir', help='Directory to save model in')
     args = parser.parse_args()
-    generate_model(args.dir)
+    generate_model(args.outputdir)
