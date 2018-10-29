@@ -26,19 +26,24 @@ def train_lr(X_train, y_train):
     return lr, std_err
 
 
+def generate_model(output_dir=None):
+    cur_dir = Path(__file__).parent
+    df = pd.read_csv(cur_dir / 'housing.csv')
+    y_name = 'house_value'
+    X, y = df[df.columns.difference([y_name])], df[y_name]
+    lr, error = train_lr(X, y)
+
+    if not output_dir:
+        output_dir = Path(__file__).parent
+
+    with open(output_dir / 'model_sklearn.pkl', 'wb') as f:
+        model = {'model': lr, 'std_err': error, 'col_order': X.columns.tolist()}
+        pickle.dump(model, f, protocol=pickle.HIGHEST_PROTOCOL)
+
+
 if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument('--dir', help='Directory to save model')
     args = parser.parse_args()
-    df = pd.read_csv('housing.csv')
-    y_name = 'house_value'
-    X, y = df[df.columns.difference([y_name])], df[y_name]
-    lr, error = train_lr(X, y)
-    if args.dir:
-        cur_dir = Path(args.dir)
-    else:
-        cur_dir = Path(os.path.dirname(os.path.abspath(__file__)))
-    with open(cur_dir / 'model_sklearn.pkl', 'wb') as f:
-        model = {'model': lr, 'std_err': error, 'col_order': X.columns.tolist()}
-        pickle.dump(model, f, protocol=pickle.HIGHEST_PROTOCOL)
+    generate_model(args.dir)

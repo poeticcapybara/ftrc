@@ -1,15 +1,21 @@
 import json
 import pickle
+from pathlib import Path
 
 from flask import Flask, jsonify, request, render_template
 import pandas as pd
 
 from forms import PredictionParametersForm
+from DS.train_and_export import generate_model
 
 app = Flask('Futurice')
 app.config['SECRET_KEY'] = 'secret_key'
+model_path = Path('.') / 'model_sklearn.pkl'
 
-with open('model_sklearn.pkl', 'rb') as f:
+if not model_path.exists():
+    generate_model(output_dir=Path(__file__).parent)
+
+with open(model_path, 'rb') as f:
     model = pickle.load(f)
 
 
