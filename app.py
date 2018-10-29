@@ -1,11 +1,35 @@
 import json
+import pickle
 
 from flask import Flask, jsonify, request, render_template
+import pandas as pd
 
 from forms import PredictionParametersForm
 
 app = Flask('Futurice')
 app.config['SECRET_KEY'] = 'secret_key'
+
+with open('model_sklearn.pkl', 'rb') as f:
+    model = pickle.load(f)
+
+
+def single_prediction(X):
+    if isinstance(model['model'], str):
+        coeffs = model['coeffs']
+        intercept = model['intercept']
+        col_order = model['col_order']
+        std_err = model['std_err']
+        data = pd.DataFrame.from_dict(X, orient='index').T
+        data_point = data[col_order]
+        prediction = intercept+data_point.dot(coeffs)
+    else:
+        regression_model = model['model']
+        std_err = model['std_err']
+        col_order = model['col_order']
+        data = pd.DataFrame.from_dict(X, orient='index').T
+        data_point = data[col_order]
+        prediction = regression_model.predict(data_point)[0]
+    return prediction, std_err
 
 
 @app.route('/predict', methods=['POST'])
@@ -16,7 +40,8 @@ def predict():
         json_data = json.loads(request.data)
     form = PredictionParametersForm.from_json(json_data)
     if form.validate():
-        return jsonify('Valid!')
+        prediction, std_err = single_prediction(json_data)
+        return jsonify({'house_value': prediction, 'stddev': std_err})
     return render_template('400.html', errors=form.errors), 400
 
 
